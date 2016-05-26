@@ -5,6 +5,7 @@ var router = require('express').Router();
 var HttpError = require('../../utils/HttpError');
 var Story = require('./story.model');
 var User = require('../users/user.model')
+var Auth = require('../../utils/auth.middleware');
 
 router.param('id', function (req, res, next, id) {
   Story.findById(id)
@@ -27,8 +28,9 @@ router.get('/', function (req, res, next) {
   .catch(next);
 });
 
-router.post('/', function (req, res, next) {
-  if (req.user.isAdmin) {
+router.post('/', Auth.assert(function (req) {
+  return Auth.isAdmin(req) || (req.user && req.user.id == req.body.author_id);
+}), function (req, res, next) {
   Story.create(req.body)
   .then(function (story) {
     return story.reload({include: [{model: User, as: 'author'}]});
@@ -37,8 +39,6 @@ router.post('/', function (req, res, next) {
     res.status(201).json(includingAuthor);
   })
   .catch(next);
-  }
-  else res.send('NOT ALLOWED');
 });
 
 router.get('/:id', function (req, res, next) {
@@ -49,27 +49,21 @@ router.get('/:id', function (req, res, next) {
   .catch(next);
 });
 
-router.put('/:id', function (req, res, next) {
-  if (req.user.isAdmin) {
+router.put('/:id', Auth.assertAdminOrAuthor, function (req, res, next) {
+  if (!Auth.isAdmin(req)) delete req.body.author_id;
   req.story.update(req.body)
   .then(function (story) {
     res.json(story);
   })
   .catch(next);
-  }
-  else res.send('NOT ALLOWED');
 });
 
-router.delete('/:id', function (req, res, next) {
-  if (req.user.isAdmin) {
-  req.story.update(req.body)
+router.delete('/:id', Auth.assertAdminOrAuthor, function (req, res, next) {
   req.story.destroy()
   .then(function () {
     res.status(204).end();
   })
   .catch(next);
-  }
-  else res.send('NOT ALLOWED');
 });
 
 module.exports = router;

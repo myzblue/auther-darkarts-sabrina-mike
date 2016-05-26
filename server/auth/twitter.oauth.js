@@ -5,6 +5,7 @@ var passport = require('passport');
 var TwitterStrategy = require('passport-twitter');
 
 var User = require('../api/users/user.model');
+var secrets = require('../../secrets');
 
 router.get('/', passport.authenticate('twitter'));
 
@@ -14,8 +15,8 @@ router.get('/callback', passport.authenticate('twitter', {
 }));
 
 passport.use(new TwitterStrategy({
-  consumerKey: 'bzPNTTJuDxhu8mM86L5LpFQj3',
-  consumerSecret: require('../../secrets/secrets.js').twitter,
+  consumerKey: 'xe86sGm0HUu7qTwnQBq89dX02',
+  consumerSecret: secrets.twitter,
   callbackURL: 'http://127.0.0.1:8080/auth/twitter/callback'
 }, function (token, refreshToken, profile, done) {
   var info = {

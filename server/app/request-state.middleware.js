@@ -5,6 +5,7 @@ var session = require('express-session');
 var passport = require('passport');
 
 var User = require('../api/users/user.model');
+var secrets = require('../../secrets');
 
 router.use(function (req, res, next) {
   var bodyString = '';
@@ -19,7 +20,7 @@ router.use(function (req, res, next) {
 });
 
 router.use(session({
-  secret: require('../../secrets/secrets.js').session,
+  secret: secrets.session,
   resave: false,
   saveUninitialized: false
 }));

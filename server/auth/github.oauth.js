@@ -5,6 +5,7 @@ var passport = require('passport');
 var GitHubStrategy = require('passport-github').Strategy;
 
 var User = require('../api/users/user.model');
+var secrets = require('../../secrets');
 
 router.get('/', passport.authenticate('github'));
 
@@ -14,8 +15,8 @@ router.get('/callback', passport.authenticate('github', {
 }));
 
 passport.use(new GitHubStrategy({
-  clientID: '932d59ca771077e01d58',
-  clientSecret: require('../../secrets/secrets.js').github,
+  clientID: '6070304fd627e594fbb1',
+  clientSecret: secrets.github,
   callbackURL: 'http://127.0.0.1:8080/auth/github/callback'
 }, function (token, refreshToken, profile, done) {
   var info = {

@@ -5,6 +5,7 @@ var router = require('express').Router();
 var HttpError = require('../../utils/HttpError');
 var User = require('./user.model');
 var Story = require('../stories/story.model');
+var Auth = require('../../utils/auth.middleware');
 
 router.param('id', function (req, res, next, id) {
   User.findById(id)
@@ -16,26 +17,20 @@ router.param('id', function (req, res, next, id) {
   .catch(next);
 });
 
-router.get('/', function (req, res, next) {
-  if (req.user) {
+router.get('/', Auth.assertAuthenticated, function (req, res, next) {
   User.findAll({})
   .then(function (users) {
     res.json(users);
   })
   .catch(next);
-  }
-  else res.send('NOT ALLOWED');
 });
 
-router.post('/', function (req, res, next) {
-if ((req.user===req.requestedUser) || req.user.isAdmin) {
+router.post('/', Auth.assertAdmin, function (req, res, next) {
   User.create(req.body)
   .then(function (user) {
     res.status(201).json(user);
   })
   .catch(next);
-  }
-  else res.send('NOT ALLOWED');
 });
 
 router.get('/:id', function (req, res, next) {
@@ -46,26 +41,21 @@ router.get('/:id', function (req, res, next) {
   .catch(next);
 });
 
-router.put('/:id', function (req, res, next) {
-  if ((req.user===req.requestedUser) || req.user.isAdmin) {
-    req.requestedUser.update(req.body)
-    .then(function (user) {
-      res.json(user);
-    })
-    .catch(next);
-  }
-  else res.send('NOT ALLOWED');
+router.put('/:id', Auth.assertAdminOrSelf, function (req, res, next) {
+  if (Auth.isSelf(req)) delete req.body.isAdmin;
+  req.requestedUser.update(req.body)
+  .then(function (user) {
+    res.json(user);
+  })
+  .catch(next);
 });
 
-router.delete('/:id', function (req, res, next) {
-  if ((req.user===req.requestedUser) || req.user.isAdmin) {
+router.delete('/:id', Auth.assertAdminOrSelf, function (req, res, next) {
   req.requestedUser.destroy()
   .then(function () {
     res.status(204).end();
   })
   .catch(next);
-  }
-  else res.send('NOT ALLOWED');
 });
 
 module.exports = router;
